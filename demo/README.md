@@ -1,7 +1,13 @@
 **GIFT fMRI Example Data (Resting State)**
+### Table of Contents
+1. [Introduction](#secIntro)
+2. [Data](#secData)
+3. [Preprocessing the demo data](#secProcDemo)
+4. [Running GIFT](#secGift)
+5. [Conclusion](#secConc)
+6. [References](#secRef)
 
-
-# **Introduction**
+# **Introduction** <a name="secIntro"></a>
 
 
 ## Demonstration data for GIFT
@@ -19,7 +25,7 @@ This pipeline processes raw data to the end product, including preprocessing usi
 This data is partitioned to show results with few subjects and is biased and may not be used for research.
 
 
-# **Data**
+# **Data** <a name="secData"></a>
 
 
 ## Raw Data
@@ -31,7 +37,7 @@ Preprocessed Data
 To make the computer processing less daunting to you we have a dataset that has preprocessed all the regular steps ahead.
 
 
-# **Processing The Demo Data**
+# **Processing The Demo Data** <a name="secProcDemo"></a>
 
 ## `bidsify-neuromark.sh` - Format Dataset According to BIDS
 
@@ -66,11 +72,7 @@ To run `fslmaths`, I start the fmriprep container in `smooth_fmriprep_results.sh
 
 This command utilizes fslmaths utility from Freesurfer (available in fmriprep too). Of course, you are welcome to use a different smoothing tool to achieve the same end.
 
-
-
-
-
-## Running GIFT
+# Running GIFT <a name="secGift"></a>
 
 Now, that the data has been preprocessed, we turn to GIFT to actually carry out the Independent component analysis. GIFT is available in several flavors: as a Docker app, Matlab app with a graphical user interface. In following paragraphs, we look closer at all of the different ways to run GIFT.
 
@@ -141,7 +143,7 @@ This signifies the basic information GIFT-BIDS needs to run, as well as choices 
 To find out more parameter possibilities, check out the configuration file examples under [https://github.com/trendscenter/gift/tree/master/GroupICATv4.0c/icatb/icatb_batch_files](https://github.com/trendscenter/gift/tree/master/GroupICATv4.0c/icatb/icatb_batch_files).
 
 
-# **Conclusion** 
+# **Conclusion** <a name="secConc"></a>
 
 We are happy if GIFT-BIDS can deem helpful in your work. Hopefully, this demo made you step closer to utilizing GIFT in your analyses, thus reducing computational burden and processing time.
 
@@ -155,7 +157,7 @@ If you have used GIFT in your work, please cite:
 
 
 
-# References
+# References <a name="secRef"></a>
 
 1.  Du, Y., Fu, Z., Sui, J., Gao, S., Xing, Y., Lin, D., ... & Alzheimer's Disease Neuroimaging Initiative. (2020). NeuroMark: An automated and adaptive ICA based pipeline to identify reproducible fMRI markers of brain disorders. _NeuroImage: Clinical_, _28_, 102375.
 
