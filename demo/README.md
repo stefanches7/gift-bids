@@ -43,9 +43,9 @@ Data preprocessing includes alignment with the MNI space and different other sta
 
 
 ```
-$ singularity run --cleanenv fmriprep.simg \
-    path/to/data/dir path/to/output/dir \
-    participant \
+$ singularity run --cleanenv fmriprep.simg 
+    path/to/data/dir path/to/output/dir 
+    participant 
     --participant-label label
 ```
 
@@ -57,9 +57,10 @@ For a better ICA reconstruction in GIFT, we smooth the data using a Gaussian ker
 
 
 ```
-fslmaths /out/fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-*1_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz \ #input file
--kernel gauss 4.2466452 \ #smoothing kernel details
--fmean \ #mean type /out/fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-1_space-MNI152NLin2009cAsym_desc-preproc_bold10sm.nii.gz #output path
+fslmaths /out/fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-*1_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz  #input file
+-kernel gauss 4.2466452  #smoothing kernel details
+-fmean #mean type 
+/out/fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-1_space-MNI152NLin2009cAsym_desc-preproc_bold10sm.nii.gz #output path
 ```
 To run `fslmaths`, I start the fmriprep container in `smooth_fmriprep_results.sh` and execute `smooth_subjects.sh` in this container.
 
@@ -86,15 +87,15 @@ We launch GIFT-BIDS with the command of the following form:
 
 
 ```
-singularity run --bind <root>/tmp1:/tmp --bind &lt;root>/tmp2:/var/tmp \ #bind tmp directories 
---bind <root>/ZN_Neuromark_BIDS:/data \ #input data BIDS-formatted directory \
---bind <root>/<output directory>:/output \ #output directory \
---bind <root>/cfg:/cfg \ #directory with the run configuration, explained below \
-<root>/trends_gift-bids.img \ #singularity GIFT-BIDS container \
-/data /output \ #pointer to the mounted directories which should be used as in- and output \
-participant --participant_label 004 033 111 201 \ #list of participant IDs to process  \
---config /cfg/config_spatial_ica_bids.m \ #GIFT run config  \
-1><log-file> 2>&1 \ #reroute err and std output to log-file
+singularity run --bind <root>/tmp1:/tmp --bind &lt;root>/tmp2:/var/tmp  #bind tmp directories 
+--bind <root>/ZN_Neuromark_BIDS:/data  #input data BIDS-formatted directory 
+--bind <root>/<output directory>:/output  #output directory 
+--bind <root>/cfg:/cfg  #directory with the run configuration, explained below 
+<root>/trends_gift-bids.img #singularity GIFT-BIDS container 
+/data /output  #pointer to the mounted directories which should be used as in- and output 
+participant --participant_label 004 033 111 201  #list of participant IDs to process  
+--config /cfg/config_spatial_ica_bids.m  #GIFT run config  
+1><log-file> 2>&1  #reroute err and std output to log-file
 ```
 
 
