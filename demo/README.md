@@ -1,36 +1,28 @@
 **GIFT fMRI Example Data (Resting State)**
 
-How To: A) Insert items under body section, B) Select body headers and hit CTRL+ALT+2, C) Refresh TOC
 
-Table of Contents
-
-
-[TOC]
+# **Introduction**
 
 
-
-# **Introduction** {#introduction}
-
-
-## Demonstration data for GIFT {#demonstration-data-for-gift}
+## Demonstration data for GIFT
 
 GIFT is a handy and efficient tool that performs customizable group independent component analysis (GICA) on a study cohort. In this tutorial, we walk you through a typical GIFT analysis explaining the pipeline and its parts. We demonstrate how to use the pipeline on a cohort of 10 males and 10 females from an undisclosed study.
 
 
-## Different Aspects In Data Processing {#different-aspects-in-data-processing}
+## Different Aspects In Data Processing 
 
 This pipeline processes raw data to the end product, including preprocessing using fmriprep. GICA postprocessing is performed afterwards. This group ICA is guided by Neuromark, a brain atlas derived from a big cohort of fMRI scans, as described in [Du et al. 20201](https://www.sciencedirect.com/science/article/pii/S2213158220302126). At last comes the Dynamic Functional Connectivity step. It calculates connectivity between different brain regions and highlights differences between two groups (healthy controls versus patients).
 
 
-## Data Not For Research (Disclaimer) {#data-not-for-research-disclaimer}
+## Data Not For Research (Disclaimer) 
 
 This data is partitioned to show results with few subjects and is biased and may not be used for research.
 
 
-# **Data** {#data}
+# **Data**
 
 
-## Raw Data {#raw-data}
+## Raw Data
 
 Raw fMRI and structural T1 data is available if you have time to run demo from scratch. Please contact the authors.
 
@@ -39,10 +31,13 @@ Preprocessed Data
 To make the computer processing less daunting to you we have a dataset that has preprocessed all the regular steps ahead.
 
 
-# **Processing The Demo Data** {#processing-the-demo-data}
+# **Processing The Demo Data**
 
+## `bidsify-neuromark.sh` - Format Dataset According to BIDS
 
-## Preprocessing the Raw Data {#preprocessing-the-raw-data}
+BIDS is a guideline providing a tidy and reproducible way to work with neuroimaging dataset. This script adds a dataset description, participants list and formats the names according to the specification. The BIDS dataset will be used in the downstream applications.
+
+## `run-fmriprep.sh` - Preprocessing the Raw Data 
 
 Data preprocessing includes alignment with the MNI space and different other standartization/artifact removal procedures. We use fMRIprep (Esteban et al., 2019)<sup><a href="#bookmark=id.x3n4vrij65zt">2</a></sup> for data preprocessing. It is possible to run this tool on cluster using e.g. Singularity (or Docker):
 
@@ -57,25 +52,29 @@ $ singularity run --cleanenv fmriprep.simg \
 
 Please refer to [fMRIprep documentation3](https://fmriprep.org/en/1.5.1/index.html) for further information on preprocessing steps and methods. Furthermore, we attach our fMRIprep run script to the present repository under run-fmriprep.sh.
 
-For better statistical results later on, it is recommended to additionally smooth the data with a Gaussian filter. Use the following command, for example: 
+## `smooth_fmriprep_results.sh` and `smooth_subjects.sh` - Smooth the fMRIprep output
+For a better ICA reconstruction in GIFT, we smooth the data using a Gaussian kernel. The core functionality is provided by `smooth_subjects.sh`:
 
 
 ```
 fslmaths /out/fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-*1_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz \ #input file
 -kernel gauss 4.2466452 \ #smoothing kernel details
 -fmean \ #mean type /out/fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-1_space-MNI152NLin2009cAsym_desc-preproc_bold10sm.nii.gz #output path
+```
+To run `fslmaths`, I start the fmriprep container in `smooth_fmriprep_results.sh` and execute `smooth_subjects.sh` in this container.
 
 This command utilizes fslmaths utility from Freesurfer (available in fmriprep too). Of course, you are welcome to use a different smoothing tool to achieve the same end.
-```
 
 
 
-## Running GIFT {#running-gift}
+
+
+## Running GIFT
 
 Now, that the data has been preprocessed, we turn to GIFT to actually carry out the Independent component analysis. GIFT is available in several flavors: as a Docker app, Matlab app with a graphical user interface. In following paragraphs, we look closer at all of the different ways to run GIFT.
 
 
-## Processing Independent Component Analysis Using GIFT-BIDS-App {#processing-independent-component-analysis-using-gift-bids-app}
+## `run-gift-bids-all.sh` - Processing Independent Component Analysis Using GIFT-BIDS-App
 
 GIFT-BIDS is available as a Docker container from Docker hub. The flavor of GIFT-BIDS, which we refer to as “regular GIFT”, is available as MATLAB GUI application. 
 
@@ -86,31 +85,20 @@ GIFT-BIDS does **not **require you to have a MATLAB license.
 We launch GIFT-BIDS with the command of the following form: 
 
 
-<table>
-  <tr>
-   <td>
-   </td>
-  </tr>
-  <tr>
-   <td><code>singularity run --bind &lt;root>/tmp1:/tmp --bind &lt;root>/tmp2:/var/tmp \ #bind tmp directories \
---bind &lt;root>/ZN_Neuromark_BIDS:/data \ #input data BIDS-formatted directory \
---bind &lt;root>/&lt;output directory>:/output \ #output directory \
---bind &lt;root>/cfg:/cfg \ #directory with the run configuration, explained below \
-&lt;root>/trends_gift-bids-2022-05-23-9c12f738c4dd.img \ #singularity GIFT-BIDS container \
+```
+singularity run --bind <root>/tmp1:/tmp --bind &lt;root>/tmp2:/var/tmp \ #bind tmp directories 
+--bind <root>/ZN_Neuromark_BIDS:/data \ #input data BIDS-formatted directory \
+--bind <root>/<output directory>:/output \ #output directory \
+--bind <root>/cfg:/cfg \ #directory with the run configuration, explained below \
+<root>/trends_gift-bids.img \ #singularity GIFT-BIDS container \
 /data /output \ #pointer to the mounted directories which should be used as in- and output \
 participant --participant_label 004 033 111 201 \ #list of participant IDs to process  \
 --config /cfg/config_spatial_ica_bids.m \ #GIFT run config  \
-1>&lt;log-file> 2>&1 \ #reroute err and std output to log-file</code>
-   </td>
-  </tr>
-  <tr>
-   <td>
-   </td>
-  </tr>
-</table>
+1><log-file> 2>&1 \ #reroute err and std output to log-file
+```
 
 
-where &lt;root> is a path to a root directory. Here, we mount the directories from our system into the Singularity container of GIFT. 
+where `<root>` is a path to a root directory. Here, we mount the directories from our system into the Singularity container of GIFT. 
 
 In this command we use Singularity, an alternative virtualization engine to Docker. Docker images and Singularity images are mutually convertible. One can e.g. use docker2singularity for image conversion. Both Docker and Singularity utilize very similar concepts - please consult the respective documentation for more information.
 
@@ -121,243 +109,43 @@ If you have a different form of subject IDs (say, the first is “M87395841”),
 Another core part of the analysis is the run configuration.
 
 
-## GIFT run configuration {#gift-run-configuration}
+## GIFT run configuration 
 
 While MATLAB GUI version of GIFT allows to configure the run in the GUI directly, GIFT-BIDS utilizes a pre-written *_config.m file to choose the run mode.
 
 Config file contents are simple “key=value” pairs written in MATLAB. For example, here is an excerpt of config_spatial_ica_bids.m we use in this demo:
 
+```
+%% Modality. Options are fMRI and EEG 
+modalityType = 'fMRI'; 
 
-<table>
-  <tr>
-   <td><code>%% Modality. Options are fMRI and EEG \
-modalityType = 'fMRI'; \
- \
-%% Data Pre-processing options \
-% 1 - Remove mean per time point \
-% 2 - Remove mean per voxel \
-% 3 - Intensity normalization \
-% 4 - Variance normalization \
-preproc_type = 1; \
- \
-%% 'Which ICA Algorithm Do You Want To Use'; \
-% see icatb_icaAlgorithm for details or type icatb_icaAlgorithm at the \
-% command prompt. \
-% Note: Use only one subject and one session for Semi-blind ICA. Also specify atmost two reference function names \
- \
-% 1 means infomax, 2 means fastICA, etc. \
-algoType = 'moo-icar';</code>
-   </td>
-   <td>
-   </td>
-  </tr>
-  <tr>
-   <td>
-   </td>
-   <td>
-   </td>
-  </tr>
-</table>
+%% Data Pre-processing options 
+% 1 - Remove mean per time point 
+% 2 - Remove mean per voxel 
+% 3 - Intensity normalization 
+% 4 - Variance normalization
+preproc_type = 1; 
 
+%% 'Which ICA Algorithm Do You Want To Use'; 
+% see icatb_icaAlgorithm for details or type icatb_icaAlgorithm at the 
+% command prompt. 
+% Note: Use only one subject and one session for Semi-blind ICA. Also specify atmost two reference function names 
+ 
+% 1 means infomax, 2 means fastICA, etc. 
+algoType = 'moo-icar';
+```
 
 This signifies the basic information GIFT-BIDS needs to run, as well as choices like ICA algorithm.
 
 To find out more parameter possibilities, check out the configuration file examples under [https://github.com/trendscenter/gift/tree/master/GroupICATv4.0c/icatb/icatb_batch_files](https://github.com/trendscenter/gift/tree/master/GroupICATv4.0c/icatb/icatb_batch_files).
 
 
-## Running GIFT Graphical User Interface
-
-Another option of running GIFT is to run a GUI. 
-
-It is MATLAB based. This means you have to have a version of MATLAB installed at your computing machine, as well as a valid MATLAB license.
-
-Given these prerequisites are in place, we start matlab: 
-
-matlab
-
-MATLAB startup window appears:
-
-![alt_text](images/image1.png "image_tooltip")
-
-
-We load the GIFT toolbox resources from the pre-installed location, e.g. addpath(genpath('`/trdapps/linux-x86_64/matlab/toolboxes/GroupICATv4.0b/`'));
-
-Start the main GIFT component by typing gift in the “Command window”. A GUI appears.
-
-
-
-![alt_text](images/image2.png "image_tooltip")
-
-
-We first need to “Setup ICA Analysis”. This step is analogous to writing a *_config.m file in the BIDS container version. 
-
-We set up the output directory: 
-
-
-
-
-
-![alt_text](images/image3.png "image_tooltip")
-
-
-Pick the directory path on the left selection screen. The directory you select here will be opened.
-
-You are then required to confirm your choice in the right directory selection screen. After this, press “OK”.
-
-Next important step is to select the input files. 
-
-
-
-
-![alt_text](images/image4.png "image_tooltip")
-
-
-One group folder is the easiest case. Let’s look at the files in the different folders: 
-
-
-
-![alt_text](images/image5.png "image_tooltip")
-
-
-The GUI asks you to enter the subject # and # of the sessions per subject. 
-
-You will then be prompted to pick #subject times #sessions/subject fMRI files manually.
-
-
-
-
-![alt_text](images/image6.png "image_tooltip")
-
-
-We then get the list of all the files we have to locate (here, I cut the range to two subject with one session each):
-
-
-
-
-
-![alt_text](images/image7.png "image_tooltip")
-
-
-Either click of the respective position in the list, or press “Change”: 
-
-
-
-
-
-![alt_text](images/image8.png "image_tooltip")
-
-
-The same data selector opens. Navigate on the left, select the file on the right. The GUI detects slices number of the target NIfTI file and prints it (here “Files selected: 150”). 
-
-Press OK.
-
-After you are done pointing all subjects and sessions, press OK in the main selection menu:
-
-
-
-
-![alt_text](images/image9.png "image_tooltip")
-
-
-Now, we are back to the main configuration menu. Here, we can configure different details of the ICA analysis: algorithm used, number of independent components et cetera:
-
-
-
-![alt_text](images/image10.png "image_tooltip")
-
-
-It all looks similar to the *_config.m file options we write in GIFT-BIDS, doesn’t it? Psst: under the hood, the GUI produces a similar config file from the options you choose.
-
-You can get a help for individual parameters clicking at “?” in the right side of a respective position. After you have written all the parameters, click “Done” in the right topmost part of the window: 
-
-
-
-
-![alt_text](images/image11.png "image_tooltip")
-
-
-Additional ICA algorithm parameters can be configured here:
-
-
-
-
-![alt_text](images/image12.png "image_tooltip")
-
-
-After we click on “OK” here, the configuration window closes. GIFT stores the results at a prompted location under MATLAB “Command window”:
-
-
-
-![alt_text](images/image13.png "image_tooltip")
-
-
-Next step is to run the analysis: 
-
-
-![alt_text](images/image14.png "image_tooltip")
-
-
-You can choose to run all or only some parameter steps. In addition, you can choose the memory usage scheme that best suits your needs.
-
-
-![alt_text](images/image15.png "image_tooltip")
-
-
-After you are ready choosing, click on “Done” (“Do…” in the screenshot) in the bottom part of the window.
-
-System is busy doing analysis, and prints the debug output to the MATLAB “Command window” in the background: 
-
-
-![alt_text](images/image16.png "image_tooltip")
-
-
-Look there for the current steps information and potential error messages. 
-
-After the analysis is done, “Display GUI” opens automatically. Here you can visualize the core GIFT results, either by-subject, by-component or in a different fashion:
-
-
-
-![alt_text](images/image17.png "image_tooltip")
-
-
-Here, I browse the 16th component across the subjects. Subplots are interactive MATLAB plots:
-
-
-
-![alt_text](images/image18.png "image_tooltip")
-
-
-You can access this functionality under “Postprocessing”->”Display GUI” menu in the main GIFT menu. It has many additional functionalities to offer! For example, “Network Summary” dropdown position lets you explore ICA template components’ performance in the current analysis:
-
-
-
-
-
-![alt_text](images/image19.png "image_tooltip")
-
-
-Connectogram prints the computed connectivity between the IC components. 
-
-
-## MANCOVAN Analysis {#mancovan-analysis}
-
-To find significant differences between groups, we run MANCOVAN. This is a tool developed partly by the GIFT team. It will allow us to assess correlation between ICA components’ timeseries and pick the ones that are statistically significant.
-
-
-# **Interpreting the results** {#interpreting-the-results}
-
-
-## MANCOVAN scores {#mancovan-scores}
-
-More Info
-
-
-# **Conclusion** {#conclusion}
+# **Conclusion** 
 
 We are happy if GIFT-BIDS can deem helpful in your work. Hopefully, this demo made you step closer to utilizing GIFT in your analyses, thus reducing computational burden and processing time.
 
 
-## Please cite GIFT {#please-cite-gift}
+## Please cite GIFT 
 
 If you have used GIFT in your work, please cite:
 
